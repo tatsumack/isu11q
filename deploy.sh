@@ -70,7 +70,7 @@ done
 for DB_SERVER in $DB_SERVERS
 do
 cat <<EOS | ssh $KEY_OPTION $USER@$DB_SERVER sh
-sudo rm /var/log/mysql/mysqld-slow.log
+sudo rm /var/log/mysql/mysql-slow.log
 EOS
 done
 set -e
