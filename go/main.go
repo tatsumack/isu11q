@@ -787,6 +787,7 @@ func getIsuIcon(c echo.Context) error {
 	}
 	*/
 
+	c.Response().Header().Set("Cache-Control", "max-age=3600")
 	return c.Blob(http.StatusOK, "", image)
 }
 
