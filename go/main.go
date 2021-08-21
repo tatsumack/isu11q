@@ -213,13 +213,15 @@ func init() {
 func main() {
 	mode = getEnv("MODE", "")
 
-	cfg := profiler.Config{
-		Service:        "isu11q",
-		ServiceVersion: time.Now().Format("2006-01-02 15:04:05"),
-		ProjectID: os.Getenv("GCP_PROJECT_ID"),
-	}
-	if err := profiler.Start(cfg); err != nil {
-		panic(err)
+	if mode != "DEBUG" {
+		cfg := profiler.Config{
+			Service:        "isu11q",
+			ServiceVersion: time.Now().Format("2006-01-02 15:04:05"),
+			ProjectID: os.Getenv("GCP_PROJECT_ID"),
+		}
+		if err := profiler.Start(cfg); err != nil {
+			panic(err)
+		}
 	}
 
 	e := echo.New()
