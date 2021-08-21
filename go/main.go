@@ -52,6 +52,8 @@ var (
 	jiaJWTSigningKey *ecdsa.PublicKey
 
 	postIsuConditionTargetBaseURL string // JIAへのactivate時に登録する，ISUがconditionを送る先のURL
+
+	mode string //デバッグモード
 )
 
 type Config struct {
@@ -209,13 +211,17 @@ func init() {
 }
 
 func main() {
-	cfg := profiler.Config{
-		Service:        "isu11q",
-		ServiceVersion: time.Now().Format("2006-01-02 15:04:05"),
-		ProjectID: os.Getenv("GCP_PROJECT_ID"),
-	}
-	if err := profiler.Start(cfg); err != nil {
-		panic(err)
+	mode = getEnv("MODE", "")
+
+	if mode != "DEBUG" {
+		cfg := profiler.Config{
+			Service:        "isu11q",
+			ServiceVersion: time.Now().Format("2006-01-02 15:04:05"),
+			ProjectID: os.Getenv("GCP_PROJECT_ID"),
+		}
+		if err := profiler.Start(cfg); err != nil {
+			panic(err)
+		}
 	}
 
 	e := echo.New()
@@ -276,7 +282,15 @@ func getSession(r *http.Request) (*sessions.Session, error) {
 	return session, nil
 }
 
+func Mock_getUserIDFromSession(c echo.Context) (string, int, error) {
+	return "isucon", 0, nil
+}
+
 func getUserIDFromSession(c echo.Context) (string, int, error) {
+	if mode == "DEBUG" {
+		return Mock_getUserIDFromSession(c);
+	}
+
 	session, err := getSession(c.Request())
 	if err != nil {
 		return "", http.StatusInternalServerError, fmt.Errorf("failed to get session: %v", err)
@@ -601,44 +615,49 @@ func postIsu(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	targetURL := getJIAServiceURL(tx) + "/api/activate"
-	body := JIAServiceRequest{postIsuConditionTargetBaseURL, jiaIsuUUID}
-	bodyJSON, err := json.Marshal(body)
-	if err != nil {
-		c.Logger().Error(err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	reqJIA, err := http.NewRequest(http.MethodPost, targetURL, bytes.NewBuffer(bodyJSON))
-	if err != nil {
-		c.Logger().Error(err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	reqJIA.Header.Set("Content-Type", "application/json")
-	res, err := http.DefaultClient.Do(reqJIA)
-	if err != nil {
-		c.Logger().Errorf("failed to request to JIAService: %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	defer res.Body.Close()
-
-	resBody, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		c.Logger().Error(err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	if res.StatusCode != http.StatusAccepted {
-		c.Logger().Errorf("JIAService returned error: status code %v, message: %v", res.StatusCode, string(resBody))
-		return c.String(res.StatusCode, "JIAService returned error")
-	}
-
 	var isuFromJIA IsuFromJIA
-	err = json.Unmarshal(resBody, &isuFromJIA)
-	if err != nil {
-		c.Logger().Error(err)
-		return c.NoContent(http.StatusInternalServerError)
+	if mode == "DEBUG" {
+		isuFromJIA.Character = "せいかく"
+	} else {
+		targetURL := getJIAServiceURL(tx) + "/api/activate"
+		body := JIAServiceRequest{postIsuConditionTargetBaseURL, jiaIsuUUID}
+		bodyJSON, err := json.Marshal(body)
+		if err != nil {
+			c.Logger().Error(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		reqJIA, err := http.NewRequest(http.MethodPost, targetURL, bytes.NewBuffer(bodyJSON))
+		if err != nil {
+			c.Logger().Error(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		reqJIA.Header.Set("Content-Type", "application/json")
+		res, err := http.DefaultClient.Do(reqJIA)
+		if err != nil {
+			c.Logger().Errorf("failed to request to JIAService: %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		defer res.Body.Close()
+
+		resBody, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			c.Logger().Error(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+
+		if res.StatusCode != http.StatusAccepted {
+			c.Logger().Errorf("JIAService returned error: status code %v, message: %v", res.StatusCode, string(resBody))
+			return c.String(res.StatusCode, "JIAService returned error")
+		}
+
+		var isuFromJIA IsuFromJIA
+		err = json.Unmarshal(resBody, &isuFromJIA)
+		if err != nil {
+			c.Logger().Error(err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
 	}
 
 	_, err = tx.Exec("UPDATE `isu` SET `character` = ? WHERE  `jia_isu_uuid` = ?", isuFromJIA.Character, jiaIsuUUID)
