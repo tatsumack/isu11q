@@ -1297,9 +1297,24 @@ func postIsuCondition(c echo.Context) error {
 		return c.String(http.StatusNotFound, "not found: isu")
 	}
 
+	var lastTime string;
+	var perHourCount int;
+	perHourCount = 0;
+
 	var rows []*IsuCondition
 	for _, cond := range req {
 		timestamp := time.Unix(cond.Timestamp, 0)
+
+		perHour := timestamp.Format("2006/1/2 15")
+		if lastTime == perHour {
+			if perHourCount > 30 {
+				continue
+			}
+		} else {
+			lastTime = perHour
+			perHourCount = 0
+		}
+		perHourCount++
 
 		if !isValidConditionFormat(cond.Condition) {
 			return c.String(http.StatusBadRequest, "bad request body")
