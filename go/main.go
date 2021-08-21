@@ -349,6 +349,15 @@ func postInitialize(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	var rows []IsuCondition
+	for _, row := range rows {
+		condition, _ := calculateConditionLevel(row.Condition)
+		lv, _ := convertConditionLevel(condition)
+		_, err = db.Exec(
+			"UPDATE `isu_condition` SET level = ? WHERE id = ?", lv, row.ID,
+		)
+	}
+
 	_, err = db.Exec(
 		"INSERT INTO `isu_association_config` (`name`, `url`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `url` = VALUES(`url`)",
 		"jia_service_url",
@@ -1127,9 +1136,9 @@ func getIsuConditionsFromDB(db *sqlx.DB, jiaIsuUUID string, endTime time.Time, c
 		err = db.Select(&conditions, q, params...)
 	} else {
 		q := "SELECT * FROM `isu_condition` WHERE `jia_isu_uuid` = ? AND level IN (?) " +
-				"	AND `timestamp` < ?" +
-				"	AND ? <= `timestamp`" +
-				"	ORDER BY `timestamp` DESC LIMIT ?"
+			"	AND `timestamp` < ?" +
+			"	AND ? <= `timestamp`" +
+			"	ORDER BY `timestamp` DESC LIMIT ?"
 		q, params, _ := sqlx.In(q, jiaIsuUUID, levels, endTime, startTime, limit)
 		err = db.Select(&conditions, q, params...)
 	}
