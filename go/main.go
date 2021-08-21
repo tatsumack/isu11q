@@ -286,7 +286,7 @@ func getSession(r *http.Request) (*sessions.Session, error) {
 }
 
 func Mock_getUserIDFromSession(c echo.Context) (string, int, error) {
-	return "isucon", 0, nil
+	return "isucon1", 0, nil
 }
 
 func getUserIDFromSession(c echo.Context) (string, int, error) {
@@ -759,7 +759,8 @@ func getIsuIcon(c echo.Context) error {
 
 	jiaIsuUUID := c.Param("jia_isu_uuid")
 
-	err = db.Get( "SELECT `jia_user_id` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?",
+	var tmp string
+	err = db.Get(&tmp, "SELECT `jia_user_id` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?",
 		jiaUserID, jiaIsuUUID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
