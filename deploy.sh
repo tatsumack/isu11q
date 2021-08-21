@@ -10,8 +10,8 @@ LOG_BACKUP_DIR=/var/log/isucon
 USER=isucon
 KEY_OPTION="-A"
 
-WEB_SERVERS="isu03"
-APP_SERVERS="isu03"
+WEB_SERVERS="isu03 isu01"
+APP_SERVERS="isu03 isu01"
 DB_SERVER="isu02"
 
 BACKUP_TARGET_LIST="/var/log/nginx/access.log /var/log/nginx/error.log"
