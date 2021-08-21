@@ -30,7 +30,7 @@ import (
 
 const (
 	sessionName                 = "isucondition_go"
-	conditionLimit              = 10000
+	conditionLimit              = 1000000
 	frontendContentsPath        = "../public"
 	jiaJWTSigningKeyPath        = "../ec256-public.pem"
 	defaultIconDirPath          = "../icons/"
