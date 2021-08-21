@@ -33,7 +33,8 @@ const (
 	conditionLimit              = 20
 	frontendContentsPath        = "../public"
 	jiaJWTSigningKeyPath        = "../ec256-public.pem"
-	defaultIconFilePath         = "../NoImage.jpg"
+	defaultIconDirPath          = "../icons/"
+	defaultIconFilePath         = "../icons/NoImage.jpg"
 	defaultJIAServiceURL        = "http://localhost:5000"
 	mysqlErrNumDuplicateEntry   = 1062
 	conditionLevelInfo          = "info"
@@ -594,6 +595,13 @@ func postIsu(c echo.Context) error {
 		}
 	}
 
+	// image書き出し
+	err = saveIcon(jiaIsuUUID, image)
+	if err != nil {
+		c.Logger().Errorf("save image error: %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
 	tx, err := db.Beginx()
 	if err != nil {
 		c.Logger().Errorf("db error: %v", err)
@@ -603,7 +611,7 @@ func postIsu(c echo.Context) error {
 
 	_, err = tx.Exec("INSERT INTO `isu`"+
 		"	(`jia_isu_uuid`, `name`, `image`, `jia_user_id`) VALUES (?, ?, ?, ?)",
-		jiaIsuUUID, isuName, image, jiaUserID)
+		jiaIsuUUID, isuName, nil, jiaUserID)
 	if err != nil {
 		mysqlErr, ok := err.(*mysql.MySQLError)
 
@@ -715,10 +723,30 @@ func getIsuID(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
+func getIconPath(isuUUID string) string {
+	return defaultIconDirPath + isuUUID + ".jpg"
+}
+
+// image書き込み
+func saveIcon(isuUUID string, image []byte) error {
+	f, err := os.Create(getIconPath(isuUUID))
+	defer f.Close()
+	if err != nil {
+		return err
+	}
+	_, err = f.Write(image)
+	return err
+}
+
+// image読み込み
+func loadIcon(isuUUID string) ([]byte, error) {
+	return ioutil.ReadFile(getIconPath(isuUUID))
+}
+
 // GET /api/isu/:jia_isu_uuid/icon
 // ISUのアイコンを取得
 func getIsuIcon(c echo.Context) error {
-	jiaUserID, errStatusCode, err := getUserIDFromSession(c)
+	_, errStatusCode, err := getUserIDFromSession(c)
 	if err != nil {
 		if errStatusCode == http.StatusUnauthorized {
 			return c.String(http.StatusUnauthorized, "you are not signed in")
@@ -730,7 +758,16 @@ func getIsuIcon(c echo.Context) error {
 
 	jiaIsuUUID := c.Param("jia_isu_uuid")
 
-	var image []byte
+	image, err := loadIcon(jiaIsuUUID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return c.String(http.StatusNotFound, "not found: isu")
+		}
+		c.Logger().Errorf("db error: %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	/*
 	err = db.Get(&image, "SELECT `image` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?",
 		jiaUserID, jiaIsuUUID)
 	if err != nil {
@@ -741,6 +778,7 @@ func getIsuIcon(c echo.Context) error {
 		c.Logger().Errorf("db error: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+	*/
 
 	return c.Blob(http.StatusOK, "", image)
 }
