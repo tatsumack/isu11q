@@ -19,22 +19,6 @@
 -- Table structure for table `isu`
 --
 
-DROP TABLE IF EXISTS `isu`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `isu` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `jia_isu_uuid` char(36) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `character` varchar(255) DEFAULT NULL,
-  `jia_user_id` varchar(255) NOT NULL,
-  `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6),
-  `updated_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `jia_isu_uuid` (`jia_isu_uuid`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
 --
 -- Dumping data for table `isu`
 --
@@ -49,17 +33,6 @@ UNLOCK TABLES;
 -- Table structure for table `isu_association_config`
 --
 
-DROP TABLE IF EXISTS `isu_association_config`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `isu_association_config` (
-  `name` varchar(255) NOT NULL,
-  `url` varchar(255) NOT NULL,
-  PRIMARY KEY (`name`),
-  UNIQUE KEY `url` (`url`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
 --
 -- Dumping data for table `isu_association_config`
 --
@@ -73,24 +46,6 @@ UNLOCK TABLES;
 -- Table structure for table `isu_condition`
 --
 
-DROP TABLE IF EXISTS `isu_condition`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `isu_condition` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `jia_isu_uuid` char(36) NOT NULL,
-  `timestamp` datetime NOT NULL,
-  `is_sitting` tinyint(1) NOT NULL,
-  `condition` varchar(255) NOT NULL,
-  `message` varchar(255) NOT NULL,
-  `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6),
-  PRIMARY KEY (`id`),
-  KEY `i1` (`jia_isu_uuid`,`timestamp`)
-) ENGINE=InnoDB AUTO_INCREMENT=619 DEFAULT CHARSET=utf8mb4;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `isu_condition`
 --
 
 LOCK TABLES `isu_condition` WRITE;
@@ -102,16 +57,6 @@ UNLOCK TABLES;
 --
 -- Table structure for table `user`
 --
-
-DROP TABLE IF EXISTS `user`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `user` (
-  `jia_user_id` varchar(255) NOT NULL,
-  `created_at` datetime(6) DEFAULT CURRENT_TIMESTAMP(6),
-  PRIMARY KEY (`jia_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `user`
