@@ -349,15 +349,6 @@ func postInitialize(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	var rows []IsuCondition
-	for _, row := range rows {
-		condition, _ := calculateConditionLevel(row.Condition)
-		lv, _ := convertConditionLevel(condition)
-		_, err = db.Exec(
-			"UPDATE `isu_condition` SET level = ? WHERE id = ?", lv, row.ID,
-		)
-	}
-
 	_, err = db.Exec(
 		"INSERT INTO `isu_association_config` (`name`, `url`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `url` = VALUES(`url`)",
 		"jia_service_url",
@@ -1118,10 +1109,7 @@ func getIsuConditionsFromDB(db *sqlx.DB, jiaIsuUUID string, endTime time.Time, c
 
 	var levels []int
 	for key, _ := range conditionLevel {
-		lv, err := convertConditionLevel(key)
-		if err != nil {
-			continue
-		}
+		lv, _ := convertConditionLevel(key)
 		levels = append(levels, lv)
 	}
 
@@ -1202,7 +1190,7 @@ func convertConditionLevel(condition string) (int, error) {
 	case conditionLevelInfo:
 		return 1, nil
 	default:
-		return 0, fmt.Errorf("unexpected warn count")
+		return 0, nil
 	}
 
 	return 0, nil
