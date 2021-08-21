@@ -1,5 +1,5 @@
 #!/bin/sh
-set -ex 
+set -ex
 
 echo "Deploy script started."
 
@@ -10,9 +10,9 @@ LOG_BACKUP_DIR=/var/log/isucon
 USER=isucon
 KEY_OPTION="-A"
 
-WEB_SERVERS="isu01"
-APP_SERVERS="isu01"
-DB_SERVER="isu01"
+WEB_SERVERS="isu03"
+APP_SERVERS="isu03"
+DB_SERVER="isu02"
 
 BACKUP_TARGET_LIST="/var/log/nginx/access.log /var/log/nginx/error.log"
 
@@ -121,4 +121,3 @@ sudo systemctl start nginx
 EOS
 done
 echo "Deploy script finished."
-
