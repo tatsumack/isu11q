@@ -3,6 +3,7 @@ module github.com/isucon/isucon11-qualify/isucondition
 go 1.16
 
 require (
+	cloud.google.com/go/profiler v0.1.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gorilla/sessions v1.2.1

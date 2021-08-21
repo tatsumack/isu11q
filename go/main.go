@@ -24,6 +24,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+
+	"cloud.google.com/go/profiler"
 )
 
 const (
@@ -207,6 +209,15 @@ func init() {
 }
 
 func main() {
+	cfg := profiler.Config{
+		Service:        "isu11q",
+		ServiceVersion: time.Now().Format("2006-01-02 15:04:05"),
+		ProjectID: os.Getenv("GCP_PROJECT_ID"),
+	}
+	if err := profiler.Start(cfg); err != nil {
+		panic(err)
+	}
+
 	e := echo.New()
 	e.Debug = true
 	e.Logger.SetLevel(log.DEBUG)
