@@ -652,7 +652,6 @@ func postIsu(c echo.Context) error {
 			return c.String(res.StatusCode, "JIAService returned error")
 		}
 
-		var isuFromJIA IsuFromJIA
 		err = json.Unmarshal(resBody, &isuFromJIA)
 		if err != nil {
 			c.Logger().Error(err)
