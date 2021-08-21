@@ -254,6 +254,8 @@ func main() {
 	e.GET("/register", getIndex)
 	e.Static("/assets", frontendContentsPath+"/assets")
 
+	e.GET("/debug_dump_icon", debugDumpIcon)
+
 	mySQLConnectionData = NewMySQLConnectionEnv()
 
 	var err error
@@ -785,6 +787,30 @@ func getIsuIcon(c echo.Context) error {
 	*/
 
 	return c.Blob(http.StatusOK, "", image)
+}
+
+func debugDumpIcon(c echo.Context) error {
+	_, errStatusCode, err := getUserIDFromSession(c)
+	if err != nil {
+		if errStatusCode == http.StatusUnauthorized {
+			return c.String(http.StatusUnauthorized, "you are not signed in")
+		}
+
+		c.Logger().Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	isuList := []Isu{}
+	err = db.Select(&isuList, "SELECT * FROM `isu`")
+	if err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	for _, isu := range isuList {
+		err = saveIcon(isu.JIAIsuUUID, isu.Image)
+	}
+
+	return c.NoContent(http.StatusOK)
 }
 
 // GET /api/isu/:jia_isu_uuid/graph
