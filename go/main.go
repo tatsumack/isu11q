@@ -217,7 +217,7 @@ func main() {
 		cfg := profiler.Config{
 			Service:        "isu11q",
 			ServiceVersion: time.Now().Format("2006-01-02 15:04:05"),
-			ProjectID: os.Getenv("GCP_PROJECT_ID"),
+			ProjectID:      os.Getenv("GCP_PROJECT_ID"),
 		}
 		if err := profiler.Start(cfg); err != nil {
 			panic(err)
@@ -288,7 +288,7 @@ func Mock_getUserIDFromSession(c echo.Context) (string, int, error) {
 
 func getUserIDFromSession(c echo.Context) (string, int, error) {
 	if mode == "DEBUG" {
-		return Mock_getUserIDFromSession(c);
+		return Mock_getUserIDFromSession(c)
 	}
 
 	session, err := getSession(c.Request())
@@ -1224,6 +1224,7 @@ func postIsuCondition(c echo.Context) error {
 		return c.String(http.StatusNotFound, "not found: isu")
 	}
 
+	var rows []*IsuCondition
 	for _, cond := range req {
 		timestamp := time.Unix(cond.Timestamp, 0)
 
@@ -1231,16 +1232,21 @@ func postIsuCondition(c echo.Context) error {
 			return c.String(http.StatusBadRequest, "bad request body")
 		}
 
-		_, err = tx.Exec(
-			"INSERT INTO `isu_condition`"+
-				"	(`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`)"+
-				"	VALUES (?, ?, ?, ?, ?)",
-			jiaIsuUUID, timestamp, cond.IsSitting, cond.Condition, cond.Message)
-		if err != nil {
-			c.Logger().Errorf("db error: %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
-
+		rows = append(rows, &IsuCondition{
+			JIAIsuUUID: jiaIsuUUID,
+			Timestamp:  timestamp,
+			IsSitting:  cond.IsSitting,
+			Condition:  cond.Condition,
+			Message:    cond.Message,
+		})
+	}
+	_, err = tx.NamedExec(
+		"INSERT INTO `isu_condition`"+
+			"	(`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`)"+
+			"	VALUES (:jia_isu_uuid, :timestamp, :is_sitting, :condition, :message)", rows)
+	if err != nil {
+		c.Logger().Errorf("db error: %v", err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	err = tx.Commit()
