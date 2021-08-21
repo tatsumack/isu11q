@@ -765,6 +765,7 @@ func getIsuIcon(c echo.Context) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return c.String(http.StatusNotFound, "not found: isu")
 		}
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	image, err := loadIcon(jiaIsuUUID)
