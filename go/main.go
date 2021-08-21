@@ -1109,7 +1109,10 @@ func getIsuConditionsFromDB(db *sqlx.DB, jiaIsuUUID string, endTime time.Time, c
 
 	var levels []int
 	for key, _ := range conditionLevel {
-		lv, _ := convertConditionLevel(key)
+		lv, err := convertConditionLevel(key)
+		if err != nil {
+			continue
+		}
 		levels = append(levels, lv)
 	}
 
