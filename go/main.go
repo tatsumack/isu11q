@@ -215,7 +215,7 @@ func main() {
 
 	if mode != "DEBUG" {
 		cfg := profiler.Config{
-			Service:        "isu11q",
+			Service:        "isu11q-2",
 			ServiceVersion: time.Now().Format("2006-01-02 15:04:05"),
 			ProjectID:      os.Getenv("GCP_PROJECT_ID"),
 		}
