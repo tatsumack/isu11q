@@ -745,7 +745,7 @@ func loadIcon(isuUUID string) ([]byte, error) {
 // GET /api/isu/:jia_isu_uuid/icon
 // ISUのアイコンを取得
 func getIsuIcon(c echo.Context) error {
-	_, errStatusCode, err := getUserIDFromSession(c)
+	jiaUserID, errStatusCode, err := getUserIDFromSession(c)
 	if err != nil {
 		if errStatusCode == http.StatusUnauthorized {
 			return c.String(http.StatusUnauthorized, "you are not signed in")
@@ -757,11 +757,16 @@ func getIsuIcon(c echo.Context) error {
 
 	jiaIsuUUID := c.Param("jia_isu_uuid")
 
-	image, err := loadIcon(jiaIsuUUID)
+	err = db.Get( "SELECT `jia_user_id` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?",
+		jiaUserID, jiaIsuUUID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return c.String(http.StatusNotFound, "not found: isu")
 		}
+	}
+
+	image, err := loadIcon(jiaIsuUUID)
+	if err != nil {
 		c.Logger().Errorf("db error: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
