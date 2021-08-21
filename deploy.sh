@@ -90,6 +90,17 @@ cd go
 PATH=/home/isucon/local/go/bin:/home/isucon/go/bin:/usr/bin go build -o isucondition main.go
 EOS
 done
+for DB_SERVER in $DB_SERVERS
+do
+cat <<EOS | ssh $KEY_OPTION $USER@$DB_SERVER sh
+cd $PROJECT_ROOT
+git clean -fd
+git reset --hard
+git fetch -p
+git checkout $BRANCH
+git pull --rebase
+EOS
+done
 echo "Get new git hash"
 for APP_SERVER in $APP_SERVERS
 do
