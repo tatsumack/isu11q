@@ -10,15 +10,16 @@ LOG_BACKUP_DIR=/var/log/isucon
 USER=isucon
 KEY_OPTION="-A"
 
-WEB_SERVERS="isu03"
-APP_SERVERS="isu03"
-DB_SERVER="isu02"
+WEB_SERVERS="isu01"
+APP_SERVERS="isu01"
+DB_SERVER="isu01"
 
 BACKUP_TARGET_LIST="/var/log/nginx/access.log /var/log/nginx/error.log"
 
 BRANCH=$1
 if [ -z "$BRANCH" ]; then
-  BRANCH="master"
+  echo "you must set branch"
+  exit 1
 fi
 
 # sed -n -r 's/^(LogFormat.*)(" combined)/\1 %D\2/p' /etc/httpd/conf/httpd.conf
@@ -34,7 +35,7 @@ echo "Stop Application Server"
 for APP_SERVER in $APP_SERVERS
 do
 cat <<EOS | ssh $KEY_OPTION $USER@$APP_SERVER sh
-sudo systemctl stop isucondition.go.service
+sudo systemctl stop isucholar.go.service
 EOS
 done
 
@@ -86,7 +87,7 @@ git fetch -p
 git checkout $BRANCH
 git pull --rebase
 cd go
-PATH=/home/isucon/local/go/bin:/home/isucon/go/bin:/usr/bin go build -o isucondition main.go
+PATH=/home/isucon/local/go/bin:/home/isucon/go/bin:/usr/bin go build -o isucholar main.go
 EOS
 done
 
@@ -118,7 +119,7 @@ for APP_SERVER in $APP_SERVERS
 do
 cat <<EOS | ssh $KEY_OPTION $USER@$APP_SERVER sh
 sudo swapoff -a && sudo swapon -a
-sudo systemctl start isucondition.go.service
+sudo systemctl start isucholar.go.service
 EOS
 done
 echo "Start Web Server"
